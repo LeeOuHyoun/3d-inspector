@@ -4,10 +4,13 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.js",
-    "test": "node scripts/build.js && node --test \"test/*.test.js\""
+    "test": "node scripts/build.js && node --test \"test/*.test.js\"",
+    "zip": "cd extension && bestzip ../release/3d-inspector.zip *",
+    "build:zip": "npm run build && npm run zip"
   },
   "devDependencies": {
     "acorn": "^8.19.0",
-    "astring": "^1.9.0"
+    "astring": "^1.9.0",
+    "bestzip": "^2.2.5"
   }
 }
