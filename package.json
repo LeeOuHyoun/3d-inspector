@@ -1,0 +1,13 @@
+{
+  "name": "3d-inspector",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "test": "node scripts/build.js && node --test \"test/*.test.js\""
+  },
+  "devDependencies": {
+    "acorn": "^8.19.0",
+    "astring": "^1.9.0"
+  }
+}

@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="devtools.css" />
+  </head>
+  <body>
+    <div class="bar">
+      <select id="frame"></select>
+      <button id="refresh">프레임 새로고침</button>
+      <button id="pick">요소 선택</button>
+      <button id="diag">진단</button>
+    </div>
+    <div class="bar">
+      <input id="nlsQuery" placeholder="화면 문구" />
+      <button id="nls">NLS 검색</button>
+      <input id="eventFilter" placeholder="이벤트 필터" />
+      <button id="events">이벤트</button>
+    </div>
+    <div class="bar">
+      <input id="moduleId" placeholder="모듈 ID (DS/...)" />
+      <button id="module">모듈 보기(이름 복원)</button>
+    </div>
+    <textarea id="patchSpec" rows="8" spellcheck="false" placeholder="@@ DS/모듈ID&#10;&lt;&lt;&lt;&lt;&#10;찾을 문자열(원본 번들에서 복사)&#10;====&#10;바꿀 문자열&#10;&gt;&gt;&gt;&gt;"></textarea>
+    <div class="bar">
+      <button id="patchCheck">패치 검사</button>
+      <button id="patchSave">패치 파일 저장</button>
+    </div>
+    <pre id="out"></pre>
+    <script type="module" src="panel.js"></script>
+  </body>
+</html>

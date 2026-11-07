@@ -1,0 +1,36 @@
+:root {
+  color-scheme: light dark;
+  font: 12px system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 6px;
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+select,
+input {
+  min-width: 0;
+  flex: 1;
+}
+
+pre {
+  margin: 0;
+  font: 12px ui-monospace, Consolas, monospace;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+textarea {
+  box-sizing: border-box;
+  width: 100%;
+  margin-bottom: 4px;
+  font: 12px ui-monospace, Consolas, monospace;
+}

@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "3D Inspector",
+  "version": "0.1.0",
+  "description": "ENOVIA 위젯 화면 요소에서 소스 모듈을 찾는 개발자 도구",
+  "devtools_page": "devtools.html",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["inspector.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true,
+      "match_about_blank": true
+    }
+  ]
+}

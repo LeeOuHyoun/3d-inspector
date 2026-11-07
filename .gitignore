@@ -147,3 +147,8 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+extension/inspector.js
+extension/core.js
+extension/vendor/
+CLAUDE.md
