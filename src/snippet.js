@@ -1,6 +1,6 @@
-import { buildModuleIndex, findModule, getLineStarts, toOffset, toLineColumn, parseStack, stripPlugin, flattenNls, matchNls, findNlsUsages } from './core.js';
+import { buildModuleIndex, findModule, getLineStarts, toOffset, toLineColumn, parseStack, stripPlugin, stripQuery, flattenNls, matchNls, findNlsUsages } from './core.js';
 
-const MATCH = /\/webapps\/ENOChg/i;
+const MATCH = /\/webapps\/ENOCh(?:g|ange)/i;
 const LANG_RE = /_[a-z]{2}(-[A-Z]{2})?\.js$/;
 const MAX_NODES = 5;
 const MAX_RECORDS_PER_NODE = 20;
@@ -12,6 +12,7 @@ window.__3di?.stop();
 
 const bundles = new Map();
 const loading = new Map();
+const failed = new Map();
 const records = new WeakMap();
 const counts = {};
 const errors = [];
@@ -23,12 +24,15 @@ function addError(message) {
   if (!errors.includes(message)) errors.push(message);
 }
 
-function stripQuery(url) {
-  return url.split(/[?#]/)[0];
-}
-
 function isTarget(url) {
   return MATCH.test(url) && /\.js$/i.test(stripQuery(url));
+}
+
+function setBundle(url, text) {
+  const key = stripQuery(url);
+  bundles.set(key, { url, text, modules: buildModuleIndex(text), lineStarts: getLineStarts(text) });
+  loading.set(key, Promise.resolve());
+  failed.delete(key);
 }
 
 function loadBundle(url) {
@@ -36,11 +40,21 @@ function loadBundle(url) {
   if (!loading.has(key)) {
     const job = fetch(url)
       .then((res) => res.text())
-      .then((text) => bundles.set(key, { url, text, modules: buildModuleIndex(text), lineStarts: getLineStarts(text) }))
-      .catch((e) => addError(`${url}: ${e.message}`));
+      .then((text) => setBundle(url, text))
+      .catch((e) => bundles.has(key) || failed.set(key, `${url}: ${e.message}`));
     loading.set(key, job);
   }
   return loading.get(key);
+}
+
+function addBundle(url, text) {
+  if (typeof text === 'string') setBundle(url, text);
+  else failed.set(stripQuery(url), `${url}: DevTools에서 소스를 가져오지 못함`);
+  return true;
+}
+
+function missing() {
+  return [...new Map(scriptUrls().filter(isTarget).map((u) => [stripQuery(u), u]))].filter(([key]) => !bundles.has(key)).map(([, url]) => url);
 }
 
 function loadBundles(urls) {
@@ -190,7 +204,7 @@ function formatEntry(e) {
 
 function format(el, report) {
   const head = `[3di] ${describe(el)}`;
-  if (!report.length) return `${head}\n  기록 없음 (도구 실행 전에 만들어졌거나 대상 번들 밖에서 만들어진 요소. 화면을 다시 그린 뒤 재시도)`;
+  if (!report.length) return `${head}\n  기록 없음 (${bundles.size ? '도구 실행 전에 만들어졌거나 대상 번들 밖에서 만들어진 요소. 화면을 다시 그린 뒤 재시도' : '대상 번들 소스를 읽지 못함. 진단 참고'})`;
   return [head, ...report.flatMap(({ label, depth, entries }) => [depth && `↑${depth} ${label}`, ...entries.map(formatEntry)])].filter(Boolean).join('\n');
 }
 
@@ -428,12 +442,13 @@ function pickText() {
 
 function verdicts(sources) {
   const recorded = Object.values(counts).reduce((a, b) => a + b, 0);
+  const problems = errors.length + failed.size;
   return [
-    [bundles.size > 0, `대상 번들 ${bundles.size}개`, '대상 번들(ENOChg) 없음: 위젯 iframe 프레임을 선택했는지 확인'],
+    [bundles.size > 0, `대상 번들 ${bundles.size}개`, targets() ? '대상 번들 소스를 읽지 못함: 아래 error 줄 참고' : '대상 번들(ENOChg/ENOChange) 없음: 위젯 iframe 프레임을 선택했는지 확인'],
     [recorded > 0, `요소 기록 ${recorded}건`, '요소 기록 없음: 화면을 새로고침(F5)한 뒤 다시 확인'],
     ...['PlatformAPI', 'ModelEvents'].map((name) => [buses[name], `이벤트 버스 ${name} 연결`, `이벤트 버스 ${name} 미연결: 모듈이 아직 로드되지 않았거나 모듈 ID가 바뀜`]),
     [sources.length > 0, `NLS ${sources.length}개 모듈`, 'NLS 없음: 언어 번들을 찾지 못함'],
-    [!errors.length, '오류 없음', `오류 ${errors.length}건: 아래 error 줄 참고`],
+    [!problems, '오류 없음', `오류 ${problems}건: 아래 error 줄 참고`],
   ].map(([ok, good, bad]) => (ok ? `[정상] ${good}` : `[문제] ${bad}`));
 }
 
@@ -449,7 +464,7 @@ async function diagText() {
     `bus PlatformAPI=${buses.PlatformAPI ? 'O' : 'X'} ModelEvents=${buses.ModelEvents ? 'O' : 'X'} events=${events.length} watch=${watchFilter ?? 'off'}`,
     `nls modules=${sources.length} keys=${sources.reduce((n, s) => n + s.entries.length, 0)} source=${nlsOrigin}`,
     ...[...bundles.values()].map((b) => `  ${stripQuery(b.url).split('/').slice(-2).join('/')} size=${b.text.length} lines=${b.lineStarts.length} modules=${b.modules.length}`),
-    ...errors.map((e) => `  error ${e}`),
+    ...[...errors, ...failed.values()].map((e) => `  error ${e}`),
   ].join('\n');
 }
 
@@ -516,6 +531,8 @@ window.__3di = {
   result,
   sources,
   targets,
+  missing,
+  addBundle,
   bundles,
   ready,
 };

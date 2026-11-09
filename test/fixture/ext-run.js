@@ -1,3 +1,6 @@
+const realFetch = window.fetch.bind(window);
+window.fetch = (url, ...rest) => (/\/webapps\//.test(String(url)) ? Promise.reject(new TypeError('Failed to fetch')) : realFetch(url, ...rest));
+
 window.chrome = {
   devtools: {
     inspectedWindow: {
@@ -11,7 +14,11 @@ window.chrome = {
       getResources(callback) {
         callback([
           { type: 'document', url: location.href },
-          { type: 'script', url: `${location.origin}/x.js` },
+          ...performance.getEntriesByType('resource').map((e) => ({
+            type: 'script',
+            url: e.name,
+            getContent: (cb) => realFetch(e.name).then((r) => r.text()).then((text) => cb(text, '')),
+          })),
         ]);
       },
     },

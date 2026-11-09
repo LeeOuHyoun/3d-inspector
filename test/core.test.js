@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { buildModuleIndex, findModule, getLineStarts, toOffset, toLineColumn, parseStack, flattenNls, matchNls, findNlsUsages, parsePatches, applyPatches } from '../src/core.js';
 
-const WEBAPP = new URL('../../cnc_source/3dspace/webapps/ENOChgGovernanceUX/', import.meta.url);
+const WEBAPP = new URL('../../Enovia_analysis/enovia2025/3dspace/webapps/ENOChgGovernanceUX/', import.meta.url);
 const bundle = readFileSync(new URL('ENOChgGovernanceUX.js', WEBAPP), 'utf8');
 const NLS_ID = 'DS/ENOChgGovernanceUX/assets/nls/ENOChgGovernanceNLS';
 

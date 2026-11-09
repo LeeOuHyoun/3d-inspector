@@ -6,7 +6,7 @@ import { buildModuleIndex } from '../src/core.js';
 import { patchReport, restoreModule } from '../extension/tools.js';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
-const real = read('../../cnc_source/3dspace/webapps/ENOChgGovernanceUX/ENOChgGovernanceUX.js');
+const real = read('../../Enovia_analysis/enovia2025/3dspace/webapps/ENOChgGovernanceUX/ENOChgGovernanceUX.js');
 const fixture = read('fixture/webapps/ENOChgFixture/ENOChgFixture.js');
 const toBundle = (name, text) => ({ name, text, modules: buildModuleIndex(text) });
 

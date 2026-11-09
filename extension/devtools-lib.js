@@ -1,3 +1,5 @@
+import { stripQuery } from './core.js';
+
 const POLL_MS = 100;
 
 export function evalIn(expression, frameURL) {
@@ -9,9 +11,28 @@ export function evalIn(expression, frameURL) {
   });
 }
 
+function resources() {
+  return new Promise((resolve) => chrome.devtools.inspectedWindow.getResources(resolve));
+}
+
+function contentOf(resource) {
+  return new Promise((resolve) => (resource ? resource.getContent((content) => resolve(content ?? null)) : resolve(null)));
+}
+
+async function ensureBundles(frameURL) {
+  const missing = await evalIn('window.__3di.missing()', frameURL);
+  if (!missing.length) return;
+  const byKey = new Map((await resources()).map((r) => [stripQuery(r.url), r]));
+  for (const url of missing) {
+    const text = await contentOf(byKey.get(stripQuery(url)));
+    await evalIn(`window.__3di.addBundle(${JSON.stringify(url)}, ${JSON.stringify(text)})`, frameURL);
+  }
+}
+
 let seq = 0;
 
 export async function evalAsync(expression, frameURL, timeout = 60000) {
+  await ensureBundles(frameURL);
   const id = JSON.stringify(`job${Date.now()}_${seq++}`);
   await evalIn(`window.__3di.job(${id}, ${expression})`, frameURL);
   for (const started = Date.now(); Date.now() - started < timeout; ) {
@@ -23,8 +44,8 @@ export async function evalAsync(expression, frameURL, timeout = 60000) {
   throw new Error('시간 초과');
 }
 
-function documentUrls() {
-  return new Promise((resolve) => chrome.devtools.inspectedWindow.getResources((list) => resolve(list.filter((r) => r.type === 'document').map((r) => r.url))));
+async function documentUrls() {
+  return (await resources()).filter((r) => r.type === 'document').map((r) => r.url);
 }
 
 export async function listFrames() {

@@ -65,6 +65,10 @@ export function stripPlugin(id) {
   return id.replace(/^[\w-]+!/, '');
 }
 
+export function stripQuery(url) {
+  return url.split(/[?#]/)[0];
+}
+
 export function flattenNls(obj, prefix = '') {
   return Object.entries(obj ?? {}).flatMap(([k, v]) => {
     const key = prefix ? `${prefix}.${k}` : k;
